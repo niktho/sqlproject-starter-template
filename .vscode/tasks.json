@@ -1,0 +1,88 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-src",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "src",
+                "/p:NetCoreBuild=true",
+                "/p:NETCoreTargetsPath=${workspaceRoot}/utils/build",
+                "/p:OutputPath=${workspaceRoot}/bin/src",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "build-tests",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "build",
+                "tests",
+                "/p:NetCoreBuild=true",
+                "/p:NETCoreTargetsPath=${workspaceRoot}/utils/build",
+                "/p:OutputPath=${workspaceRoot}/bin/tests",
+                // Should we suppress warnings in the test project
+                // or will it cause other unkown errors down the line?
+                "/nowarn:SQL71502",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always"
+            },
+            "problemMatcher": "$msCompile"
+        },
+        {
+            "label": "start-database",
+            "command": "docker",
+            "type": "shell",
+            "args": [
+                "run",
+                "--rm",
+                "-e=ACCEPT_EULA=Y",
+                "-e=SA_PASSWORD='TestTest.2021!'",
+                "-p=1433:1433",
+                "mcr.microsoft.com/mssql/server:2019-latest"
+            ],
+            "presentation": {
+                "reveal": "always",
+            },
+            "problemMatcher": [],
+            "runOptions": {
+                "runOn": "folderOpen"
+            }
+        },
+        {
+            "label": "publish-changes",
+            "command": "dotnet",
+            "type": "shell",
+            "args": [
+                "script",
+                "${workspaceRoot}/utils/scripts/Publish-Database.csx",
+            ],
+            "presentation": {
+                "reveal": "always",
+            },
+            "problemMatcher": [],
+            "dependsOn": [
+                "build-tests"
+            ],
+        }
+    ]
+}

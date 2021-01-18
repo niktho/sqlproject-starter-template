@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "ms-azure-devops.azure-pipelines",
+        "spmeesseman.vscode-taskexplorer",
+        "ms-mssql.mssql",
+        "vscode-icons-team.vscode-icons"
+    ]
+}

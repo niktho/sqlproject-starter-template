@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"name": "src",
+			"path": "./src",
+		},
+		{
+			"name": "tests",
+			"path": "./tests"
+		}
+	],
+	"settings": {
+		"dataworkspace.projects": [
+			"./src/src.sqlproj",
+			"./tests/tests.sqlproj"
+		]
+	}
+}

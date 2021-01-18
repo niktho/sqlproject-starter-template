@@ -1,0 +1,85 @@
+variables:
+    mssql-password: 'TestTest.2021!'
+
+# This part defines the resources
+# we need later during our build process,
+# like e.g docker containers.
+resources:
+  containers:
+    - container: mssqlserver
+      image: mcr.microsoft.com/mssql/server:2019-latest
+      env:
+        ACCEPT_EULA: Y
+        SA_PASSWORD: $(mssql-password)
+      ports:
+        - 1433:1433
+      options: --name mssqlserver
+
+trigger:
+  branches:
+    include:
+      - main
+
+pr:
+  - main
+
+jobs:
+  - job: RunUnitTests
+    pool:
+      vmImage: 'ubuntu-latest'
+
+    services:
+      mssqlserver: mssqlserver
+
+    steps:
+      - task: DotNetCoreCLI@2
+        displayName: 'Installing dotnet-script'
+        inputs:
+          command: 'custom'
+          custom: 'tool'
+          arguments: 'update dotnet-script -g'
+
+      - task: CmdLine@2
+        displayName: 'Downloading the tSQLt framework'
+        inputs:
+          script: |
+            # Need to investigate the usage of
+            # directory reference to dotnet tools.
+            $HOME/.dotnet/tools/dotnet-script $(System.DefaultWorkingDirectory)/utils/scripts/Download-tSQLtFramework.csx
+
+      - task: DotNetCoreCLI@2
+        displayName: 'Building SQL project & unit tests'
+        inputs:
+          command: 'build'
+          projects: 'tests/tests.sqlproj'
+          arguments: >
+            /p:NetCoreBuild=true
+            /p:NETCoreTargetsPath=$(System.DefaultWorkingDirectory)/utils/build
+            /p:OutputPath=$(Build.ArtifactStagingDirectory)/tests
+            /nowarn:SQL71502
+          workingDirectory: '$(System.DefaultWorkingDirectory)'
+
+      - task: CmdLine@2
+        displayName: 'Deploying SQL project & unit tests'
+        inputs:
+          script: |
+            # Need to investigate the usage of
+            # directory reference to dotnet tools.
+            $HOME/.dotnet/tools/dotnet-script $(System.DefaultWorkingDirectory)/utils/scripts/Publish-Database-DevOps.csx -- bd:$(Build.ArtifactStagingDirectory)/tests/
+
+      - task: CmdLine@2
+        displayName: 'Running unit tests'
+        inputs:
+          script: |
+            # Need to investigate the usage of
+            # directory reference to dotnet tools.
+            $HOME/.dotnet/tools/dotnet-script $(System.DefaultWorkingDirectory)/utils/scripts/Run-tSQLtUnitTests.csx -- fp:$(Build.ArtifactStagingDirectory)/.test-results/TEST-results.xml
+
+      - task: PublishTestResults@2
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: '**/TEST-*.xml'
+          searchFolder: '$(Build.ArtifactStagingDirectory)/.test-results/'
+          failTaskOnFailedTests: true
+          testRunTitle: 'Database Unit Test run'
+          buildPlatform: 'SQL Server 2019/Azure SQL v12'
