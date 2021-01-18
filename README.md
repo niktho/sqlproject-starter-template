@@ -1,5 +1,9 @@
 # Cross Platform SQL Project
 
+## Thoughts behind the project
+
+When we set up a SQL project in a new project there is always some time used to get everything up and running. To ease the effort this template is created so that everyone across Windows, Mac OS and Linux get up and running in no time.
+
 ## Warning
 
 This project is currently in development and lot of the codebase is therefore not following best practices and is missing error handling. If you find any errors please submit an issue or feel free to contribute with a pull request.
